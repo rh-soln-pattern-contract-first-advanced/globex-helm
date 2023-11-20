@@ -1,0 +1,28 @@
+apiVersion: registry.apicur.io/v1
+kind: ApicurioRegistry
+metadata:
+  name: {{ include "service-registry.name" . }}
+  namespace: {{ include "service-registry.namespace" . }}
+  labels:
+    {{- include "service-registry.labels" . | nindent 4 }}
+spec:
+  configuration:
+    persistence: "sql"
+    sql:
+      dataSource:
+        url: "jdbc:postgresql://{{ .Values.pgsql.service }}.{{ .Release.Namespace }}.svc:5432/{{ .Values.pgsql.database }}"
+        userName: {{ .Values.pgsql.user }}
+        password: {{ .Values.pgsql.password }}
+  deployment:
+    {{ if .Values.route.host }}
+    host: {{ .Values.route.host }}
+    {{ end }}
+    managedResources:
+      disableIngress: {{ .Values.ingress.disabled }}
+    podTemplateSpecPreview:
+      spec:
+        containers:
+          - name: registry
+            resources:
+              {{- toYaml .Values.resources | nindent 14 }}
+  
